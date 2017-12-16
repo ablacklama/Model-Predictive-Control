@@ -21,18 +21,18 @@ double dt = .1;
 //
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
-double ref_v = 100;
+const double ref_v = 100;
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
 // when one variable starts and another ends to make our lifes easier.
-size_t x_start = 0;
-size_t y_start = x_start + N;
-size_t psi_start = y_start + N;
-size_t v_start = psi_start + N;
-size_t cte_start = v_start + N;
-size_t epsi_start = cte_start + N;
-size_t delta_start = epsi_start + N;
-size_t a_start = delta_start + N - 1;
+const size_t x_start = 0;
+const size_t y_start = x_start + N;
+const size_t psi_start = y_start + N;
+const size_t v_start = psi_start + N;
+const size_t cte_start = v_start + N;
+const size_t epsi_start = cte_start + N;
+const size_t delta_start = epsi_start + N;
+const size_t a_start = delta_start + N - 1;
 
 class FG_eval {
  public:
@@ -53,23 +53,23 @@ class FG_eval {
 	// any anything you think may be beneficial.
 	for (unsigned int i = 0; i < N; i++) {
 		//keeps the velocity up
-		fg[0] += CppAD::pow(vars[v_start + i] - ref_v, 2);
+		fg[0] += 200 * CppAD::pow(vars[v_start + i] - ref_v, 2);
 		//minimize heading error
-		fg[0] += 2000 * CppAD::pow(vars[epsi_start + i], 2);
+		fg[0] += 5000 * CppAD::pow(vars[epsi_start + i], 2);
 		//minimize cte
-		fg[0] += 2000 * CppAD::pow(vars[cte_start + i], 2);
+		fg[0] += 5000 * CppAD::pow(vars[cte_start + i], 2);
 
 		if (i < N - 1) {
 			//keep steering angle low
-			fg[0] += 5*CppAD::pow(vars[delta_start + i], 2);
+			fg[0] += 50*CppAD::pow(vars[delta_start + i], 2);
 			// keep acceleration low
-			fg[0] += 5*CppAD::pow(vars[a_start + i], 2);
+			fg[0] += 50*CppAD::pow(vars[a_start + i], 2);
 
 			if (i < N - 2) {
 				//keep difference in steering angle low
-				fg[0] += 200*CppAD::pow(vars[delta_start + i] - vars[delta_start + i + 1], 2);
+				fg[0] += 25000*CppAD::pow(vars[delta_start + i] - vars[delta_start + i + 1], 2);
 				//keep difference in acceleration low
-				fg[0] += 10*CppAD::pow(vars[a_start + i] - vars[a_start + i + 1], 2);
+				fg[0] += 5*CppAD::pow(vars[a_start + i] - vars[a_start + i + 1], 2);
 			}
 		}
 	}
@@ -113,8 +113,8 @@ class FG_eval {
 		AD<double> delta0 = vars[delta_start + t - 1];
 		AD<double> a0 = vars[a_start + t - 1];
 
-		AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 * x0  + coeffs[3] * x0 *x0 *x0;
-		AD<double> psides0 = CppAD::atan(3 * coeffs[3] * x0 * x0 + 2*coeffs[2] * x0 + coeffs[1]);
+		AD<double> f0 = coeffs[0] + coeffs[1]*x0 + coeffs[2]*x0*x0  + coeffs[3]*x0*x0*x0;
+		AD<double> psides0 = CppAD::atan(3*coeffs[3]*x0*x0 + 2*coeffs[2]*x0 + coeffs[1]);
 
 		// Here's `x` to get you started.
 		// The idea here is to constraint this value to be 0.
@@ -126,10 +126,10 @@ class FG_eval {
 		// TODO: Setup the rest of the model constraints
 		fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
 		fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
-		fg[1 + psi_start + t] = psi1 - (psi0 - v0 * delta0/Lf * dt);
+		fg[1 + psi_start + t] = psi1 - (psi0 - v0 / Lf * delta0 * dt);
 		fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
-		fg[1 + cte_start + t] = cte1 - ((f0 - y0) + v0 * CppAD::sin(epsi0) * dt);
-		fg[1 + epsi_start + t] = epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
+		fg[1 + cte_start + t] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
+		fg[1 + epsi_start + t] = epsi1 - ((psi0 - psides0) - v0 / Lf * delta0 * dt);
 	}
   }
 };
@@ -157,9 +157,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // element vector and there are 10 timesteps. The number of variables is:
   //
   // 4 * 10 + 2 * 9
-  size_t n_vars = N * 6 + (N - 1) * 2;
+  const size_t n_vars = N * 6 + (N - 1) * 2;
   // TODO: Set the number of constraints
-  size_t n_constraints = N * 6;;
+  const size_t n_constraints = N * 6;;
 
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
