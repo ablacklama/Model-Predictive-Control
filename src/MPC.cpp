@@ -9,6 +9,7 @@ using CppAD::AD;
 size_t N = 5;
 double dt = .25;
 double ref_v = 40;
+
 // This value assumes the model presented in the classroom is used.
 //
 // It was obtained by measuring the radius formed by running the vehicle in the
@@ -20,6 +21,7 @@ double ref_v = 40;
 //
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
+
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
 // when one variable starts and another ends to make our lifes easier.
@@ -47,17 +49,26 @@ class FG_eval {
 	fg[0] = 0;
 
 	// Reference State Cost
-	// TODO: Define the cost related the reference state and
+	// Define the cost related the reference state and
 	// any anything you think may be beneficial.
 	for (unsigned int i = 0; i < N; i++) {
+		//keeps the velocity up
 		fg[0] += CppAD::pow(vars[v_start + i] - ref_v, 2);
+		//minimize heading error
 		fg[0] += CppAD::pow(vars[epsi_start + i], 2);
+		//minimize cte
 		fg[0] += CppAD::pow(vars[cte_start + i], 2);
+
 		if (i < N - 1) {
+			//keep steering angle low
 			fg[0] += CppAD::pow(vars[delta_start + i], 2);
+			// keep acceleration low
 			fg[0] += CppAD::pow(vars[a_start + i], 2);
+
 			if (i < N - 2) {
+				//keep difference in steering angle low
 				fg[0] += CppAD::pow(vars[delta_start + i] - vars[delta_start + i + 1], 2);
+				//keep difference in acceleration low
 				fg[0] += CppAD::pow(vars[a_start + i] - vars[a_start + i + 1], 2);
 			}
 		}
@@ -135,14 +146,21 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   size_t i;
   typedef CPPAD_TESTVECTOR(double) Dvector;
 
+
+  double x = state[0];
+  double y = state[1];
+  double psi = state[2];
+  double v = state[3];
+  double cte = state[4];
+  double epsi = state[5];
   // TODO: Set the number of model variables (includes both states and inputs).
   // For example: If the state is a 4 element vector, the actuators is a 2
   // element vector and there are 10 timesteps. The number of variables is:
   //
   // 4 * 10 + 2 * 9
-  size_t n_vars = 0;
+  size_t n_vars = N * 6 + (N - 1) * 2;
   // TODO: Set the number of constraints
-  size_t n_constraints = 0;
+  size_t n_constraints = N * 6;;
 
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
@@ -155,14 +173,23 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   Dvector vars_upperbound(n_vars);
   // TODO: Set lower and upper limits for variables.
 
+
   // Lower and upper limits for the constraints
   // Should be 0 besides initial state.
   Dvector constraints_lowerbound(n_constraints);
   Dvector constraints_upperbound(n_constraints);
+
   for (unsigned int i = 0; i < n_constraints; i++) {
     constraints_lowerbound[i] = 0;
     constraints_upperbound[i] = 0;
   }
+
+  vars[x_start] = x;
+  vars[y_start] = y;
+  vars[psi_start] = psi;
+  vars[v_start] = v;
+  vars[cte_start] = cte;
+  vars[epsi_start] = epsi;
 
   // object that computes objective and constraints
   FG_eval fg_eval(coeffs);
