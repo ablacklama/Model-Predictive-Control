@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 20;
-double dt = .05;
+size_t N = 10;
+double dt = .1;
 
 
 // This value assumes the model presented in the classroom is used.
@@ -53,7 +53,7 @@ class FG_eval {
 	// any anything you think may be beneficial.
 	for (unsigned int i = 0; i < N; i++) {
 		//keeps the velocity up
-		fg[0] += 20 * CppAD::pow(vars[v_start + i] - ref_v, 2);
+		fg[0] += CppAD::pow(vars[v_start + i] - ref_v, 2);
 		//minimize heading error
 		fg[0] += 1000 * CppAD::pow(vars[epsi_start + i], 2);
 		//minimize cte
@@ -67,9 +67,9 @@ class FG_eval {
 
 			if (i < N - 2) {
 				//keep difference in steering angle low
-				fg[0] += 250000*CppAD::pow(vars[delta_start + i] - vars[delta_start + i + 1], 2);
+				fg[0] += 50000*CppAD::pow(vars[delta_start + i] - vars[delta_start + i + 1], 2);
 				//keep difference in acceleration low
-				fg[0] += 50*CppAD::pow(vars[a_start + i] - vars[a_start + i + 1], 2);
+				fg[0] += CppAD::pow(vars[a_start + i] - vars[a_start + i + 1], 2);
 			}
 		}
 	}
@@ -246,7 +246,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
 
   // Cost
-  auto cost = solution.obj_value;
+  //auto cost = solution.obj_value;
   //std::cout << "Cost " << cost << std::endl;
 
 

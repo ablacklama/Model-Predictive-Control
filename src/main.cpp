@@ -91,7 +91,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
-
+		  double steer_value = j[1]["steering_angle"];
+		  double throttle_value = j[1]["throttle"];
           /*
           * Calculate steering angle and throttle using MPC.
           *
@@ -116,15 +117,31 @@ int main() {
 
 		  auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
 
-		  double cte = polyeval(coeffs, 0);
+		  double Lf = 2.67;
 
-		  double epsi = -atan(coeffs[1]);
+		  // Actuator delay in milliseconds.
+		  const int actuatorDelay = 125;
 
-		  double steer_value = j[1]["steering_angle"];
-		  double throttle_value = j[1]["throttle"];
+		  // Actuator delay in seconds.
+		  const double delay = actuatorDelay / 1000.0;
+
+		  // Initial state.
+		  const double x0 = 0;
+		  const double y0 = 0;
+		  const double psi0 = 0;
+		  const double cte0 = coeffs[0];
+		  const double epsi0 = -atan(coeffs[1]);
+
+		  // State after delay.
+		  double x_delay = x0 + (v * cos(psi0) * delay);
+		  double y_delay = y0 + (v * sin(psi0) * delay);
+		  double psi_delay = psi0 - (v * steer_value * delay / Lf);
+		  double v_delay = v + throttle_value * delay;
+		  double cte_delay = cte0 + (v * sin(epsi0) * delay);
+		  double epsi_delay = epsi0 - (v * atan(coeffs[1]) * delay /Lf);
 
 		  Eigen::VectorXd state(6);
-		  state << 0, 0, 0, v, cte, epsi;
+		  state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
 
 		  auto vars = mpc.Solve(state, coeffs);
 
@@ -150,7 +167,7 @@ int main() {
 				  mpc_y_vals.push_back(vars[i]);
 			  }
 		  }
-		  double Lf = 2.67;
+		  
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
