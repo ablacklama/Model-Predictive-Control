@@ -120,11 +120,13 @@ int main() {
 		  double Lf = 2.67;
 
 		  // Actuator delay in milliseconds.
-		  const int actuatorDelay = 125;
+		  const int actuatorDelay = 200;
 
 		  // Actuator delay in seconds.
 		  const double delay = actuatorDelay / 1000.0;
 
+		  // mph to mps
+		  v = v / 2.2369;
 		  // Initial state.
 		  const double x0 = 0;
 		  const double y0 = 0;
@@ -132,13 +134,15 @@ int main() {
 		  const double cte0 = coeffs[0];
 		  const double epsi0 = -atan(coeffs[1]);
 
+		  double psides0 = atan(3 * coeffs[3] * x0*x0 + 2 * coeffs[2] * x0 + coeffs[1]);
+		  double f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0*x0 + coeffs[3] * x0*x0*x0;
 		  // State after delay.
 		  double x_delay = x0 + (v * cos(psi0) * delay);
 		  double y_delay = y0 + (v * sin(psi0) * delay);
 		  double psi_delay = psi0 - (v * steer_value * delay / Lf);
 		  double v_delay = v + throttle_value * delay;
 		  double cte_delay = cte0 + (v * sin(epsi0) * delay);
-		  double epsi_delay = epsi0 - (v * atan(coeffs[1]) * delay /Lf);
+		  double epsi_delay = epsi0 - (v * steer_value * delay / Lf);
 
 		  Eigen::VectorXd state(6);
 		  state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;

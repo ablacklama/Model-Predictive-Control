@@ -21,7 +21,7 @@ double dt = .1;
 //
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
-const double ref_v = 100;
+const double ref_v = 60;
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
 // when one variable starts and another ends to make our lifes easier.
@@ -67,7 +67,7 @@ class FG_eval {
 
 			if (i < N - 2) {
 				//keep difference in steering angle low
-				fg[0] += 50000*CppAD::pow(vars[delta_start + i] - vars[delta_start + i + 1], 2);
+				fg[0] += 20000*CppAD::pow(vars[delta_start + i] - vars[delta_start + i + 1], 2);
 				//keep difference in acceleration low
 				fg[0] += CppAD::pow(vars[a_start + i] - vars[a_start + i + 1], 2);
 			}

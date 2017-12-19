@@ -10,7 +10,7 @@ This means the steering is limited to 25 degrees in either direction and the acc
 We also limit the state variables to be the expected state of the car. And then we evaluate the model.
 
 The cost of the model determines what it cars about. It tries to minimize the cost and some elements that add to the cost, do so in much bigger ways than others.
-I choose to multiply my difference in steering angle cost by 50,000 to make sure it didn't swerve. This also helped prevent the negative effects of the time delay.
+I choose to multiply my difference in steering angle cost by 20,000 to make sure it didn't swerve. This also helped prevent the negative effects of the time delay.
 I multiplied the cte and heading error by 1000 which seemed to be enough to keep the car on track in the right direction.
 And the steering angle and acceleration I multiplied by 50. I left the difference in acceleration and the velocity costs low.
 
@@ -20,3 +20,7 @@ And the steering angle and acceleration I multiplied by 50. I left the differenc
 My N and dt values were chosen by experimentation. 
 N seemed to produce the best results around 10. 20 caused too much lag and but my computer handled 10 just fine.
 dt was determined by the N value. I wanted the model to look at least 1 second into the future so i choose a dt value of .1
+
+## Delay
+I dealt with the delay by predicting the state the car would be at by the time the instructions were executed.
+Then I fed that predicted state to the model for calculation.
